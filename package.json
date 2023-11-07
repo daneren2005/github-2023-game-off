@@ -1,0 +1,21 @@
+{
+	"name": "github-2023-game-off",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"scripts": {
+		"dev": "vite --host 127.0.0.1 --port 8080",
+		"build": "tsc && vite build",
+		"format": "prettier --write .",
+		"preview": "vite preview",
+		"start": "npm run dev"
+	},
+	"devDependencies": {
+		"typescript": "^5.0.2",
+		"vite": "^4.4.5"
+	},
+	"dependencies": {
+		"phaser": "^3.60.0",
+		"prettier": "^3.0.3"
+	}
+}
