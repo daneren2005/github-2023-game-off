@@ -8,10 +8,13 @@ type ItemBody = PhysicsBody & { weight: number };
 type ItemHolderBody = PhysicsBody & { weight: number, label: Phaser.GameObjects.Text }
 
 const BASE_SPEED = 200;
+const MAX_SPEED = 2_000;
 export default class GameScene extends Phaser.Scene {
 	position: number = 0;
 	visiblePositions: Array<number> = [];
 	startHeight: number = 30;
+
+	downKeys: Array<Phaser.Input.Keyboard.Key> = [];
 
 	// @ts-expect-error
 	items: Phaser.Physics.Arcade.Group;
@@ -65,7 +68,10 @@ export default class GameScene extends Phaser.Scene {
 			line.geom.y2 = itemHolder2.y;
 		});
 
-		let speed = BASE_SPEED + Math.min(2_000, this.time.now / 1_000 * 20);
+		let speed = Math.min(BASE_SPEED + this.time.now / 1_000 * 20, MAX_SPEED);
+		if(this.downKeys.find(key => key.isDown)) {
+			speed = MAX_SPEED;
+		}
 		this.fallingItems.forEach(item => {
 			item.setVelocityY(speed);
 		});
@@ -86,6 +92,7 @@ export default class GameScene extends Phaser.Scene {
 			let itemIndex = this.fallingItems.indexOf(sprite as ItemBody);
 			if(itemIndex !== -1) {
 				this.fallingItems.splice(itemIndex);
+				sprite.destroy();
 				this.spawnItem();
 			}
 
@@ -118,6 +125,10 @@ export default class GameScene extends Phaser.Scene {
 		});
 
 		// TODO: Press down to speed up
+		this.downKeys = [
+			this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.S) as Phaser.Input.Keyboard.Key,
+			this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN) as Phaser.Input.Keyboard.Key
+		];
 		
 		this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.P).on('down', () => {
 			this.paused = !this.paused;
@@ -219,7 +230,7 @@ export default class GameScene extends Phaser.Scene {
 			let itemHolder = itemHolders[i] as ItemHolderBody;
 
 			let diffWeight = itemHolder.weight - averageWeight;
-			itemHolder.setVelocityY(diffWeight / 20);
+			itemHolder.setVelocityY(diffWeight / 5);
 		}
 	}
 
