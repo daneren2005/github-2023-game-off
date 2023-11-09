@@ -7,6 +7,7 @@ type PhysicsBody = Phaser.Types.Physics.Arcade.ImageWithDynamicBody;
 type ItemBody = PhysicsBody & { weight: number };
 type ItemHolderBody = PhysicsBody & { weight: number, label: Phaser.GameObjects.Text }
 
+const BASE_SPEED = 200;
 export default class GameScene extends Phaser.Scene {
 	position: number = 0;
 	visiblePositions: Array<number> = [];
@@ -18,6 +19,9 @@ export default class GameScene extends Phaser.Scene {
 	itemHolders: Phaser.Physics.Arcade.StaticGroup;
 	itemHolderLines: Array<Phaser.GameObjects.Line> = [];
 	fallingItems: Array<ItemBody> = [];
+
+	// @ts-expect-error
+	scoreTextBox: Phaser.GameObjects.Text;
 
 	paused = false;
 
@@ -38,6 +42,11 @@ export default class GameScene extends Phaser.Scene {
 		this.initKeys();
 		this.initPositions(2);
 		this.spawnItem();
+
+		this.scoreTextBox = this.add.text(0, 0, 'Score: 0', {
+			color: 'white',
+			fontSize: '30px'
+		});
 	}
 
 	update() {
@@ -54,6 +63,11 @@ export default class GameScene extends Phaser.Scene {
 
 			line.geom.x2 = itemHolder2.x - itemHolder2.width / 2;
 			line.geom.y2 = itemHolder2.y;
+		});
+
+		let speed = BASE_SPEED + Math.min(2_000, this.time.now / 1_000 * 20);
+		this.fallingItems.forEach(item => {
+			item.setVelocityY(speed);
 		});
 	}
 
@@ -173,7 +187,7 @@ export default class GameScene extends Phaser.Scene {
 		this.fallingItems.push(sprite);
 		this.items.add(sprite);
 
-		sprite.setVelocity(0, 200);
+		sprite.setVelocity(0, BASE_SPEED);
 		
 		sprite.setCollideWorldBounds(true);
 		sprite.body.onWorldBounds = true;
@@ -185,6 +199,10 @@ export default class GameScene extends Phaser.Scene {
 		}
 		itemHolder.weight += item.weight;
 		itemHolder.label.text = `${formatNumber(itemHolder.weight)}`;
+
+		let itemHolders = this.itemHolders.children.entries as Array<ItemHolderBody>;
+		let totalScore = itemHolders.reduce((total, itemHolder) => total + itemHolder.weight, 0);
+		this.scoreTextBox.text = `Score: ${totalScore}`;
 
 		this.rebalanceWeights();
 
