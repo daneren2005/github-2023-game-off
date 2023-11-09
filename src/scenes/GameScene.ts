@@ -1,13 +1,25 @@
 import Phaser from 'phaser';
 import items from '../data/items';
 import randomElement from '../utils/random-element';
+import formatNumber from '../utils/format-number';
+
+type PhysicsBody = Phaser.Types.Physics.Arcade.ImageWithDynamicBody;
+type ItemBody = PhysicsBody & { weight: number };
+type ItemHolderBody = PhysicsBody & { weight: number, label: Phaser.GameObjects.Text }
 
 export default class GameScene extends Phaser.Scene {
 	position: number = 0;
 	visiblePositions: Array<number> = [];
 	startHeight: number = 30;
 
-	fallingSprites: Array<Phaser.Types.Physics.Arcade.ImageWithDynamicBody> = [];
+	// @ts-expect-error
+	items: Phaser.Physics.Arcade.Group;
+	// @ts-expect-error
+	itemHolders: Phaser.Physics.Arcade.StaticGroup;
+	itemHolderLines: Array<Phaser.GameObjects.Line> = [];
+	fallingItems: Array<ItemBody> = [];
+
+	paused = false;
 
 	constructor() {
 		super('game');
@@ -18,58 +30,185 @@ export default class GameScene extends Phaser.Scene {
 			frameWidth: 32,
 			frameHeight: 32
 		});
+		this.load.image('box', 'Box.png');
 	}
 
 	create() {
+		this.initPhysics();
 		this.initKeys();
 		this.initPositions(2);
 		this.spawnItem();
+	}
 
-		this.physics.world.on('worldbounds', (body: any) => {
-			let sprite = body.gameObject as Phaser.Types.Physics.Arcade.ImageWithDynamicBody;
+	update() {
+		let itemHolders = this.itemHolders.children.entries as Array<ItemHolderBody>;
+		itemHolders.forEach(itemHolder => {
+			itemHolder.label.y = itemHolder.y;
+		});
 
-			let index = this.fallingSprites.indexOf(sprite);
-			if(index !== -1) {
-				this.fallingSprites.splice(index);
-			}
-			body.onWorldBounds = false;
-			this.spawnItem();
+		this.itemHolderLines.forEach((line, index) => {
+			let itemHolder1 = itemHolders[index];
+			let itemHolder2 = itemHolders[index + 1];
+			line.geom.x1 = itemHolder1.x + itemHolder1.width / 2;
+			line.geom.y1 = itemHolder1.y;
+
+			line.geom.x2 = itemHolder2.x - itemHolder2.width / 2;
+			line.geom.y2 = itemHolder2.y;
 		});
 	}
 
+	initPhysics() {
+		this.items = this.physics.add.group();
+		this.itemHolders = this.physics.add.staticGroup();
+
+		this.physics.add.collider(this.itemHolders, this.items, (itemHolder: any, item: any) => {
+			this.itemLanded(itemHolder, item);
+		});
+
+		this.physics.world.on('worldbounds', (body: any) => {
+			let sprite = body.gameObject as PhysicsBody;
+
+			// If somehow we get to the end of the world want to not completely break the game
+			let itemIndex = this.fallingItems.indexOf(sprite as ItemBody);
+			if(itemIndex !== -1) {
+				this.fallingItems.splice(itemIndex);
+				this.spawnItem();
+			}
+
+			// If box hits the bottom you have lost!
+			let holderIndex = this.itemHolders.children.entries.indexOf(sprite);
+			if(holderIndex !== -1) {
+				console.warn('Game over!');
+				this.pause();
+			}
+
+			// Don't keep triggering this over and over again
+			body.onWorldBounds = false;
+		});
+	}
 	initKeys() {
+		// Left
 		this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.A).on('down', () => {
 			this.incPosition(-1);
 		});
+		this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT).on('down', () => {
+			this.incPosition(-1);
+		});
+
+		// Right
 		this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.D).on('down', () => {
 			this.incPosition(1);
 		});
+		this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT).on('down', () => {
+			this.incPosition(1);
+		});
+
+		// TODO: Press down to speed up
+		
+		this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.P).on('down', () => {
+			this.paused = !this.paused;
+			if(this.paused) {
+				this.pause();
+			} else {
+				this.resume();
+			}
+		});
 	}
+
 	incPosition(inc: -1 | 1) {
+		if(this.paused) {
+			return;
+		}
+
 		this.position = Math.max(0, Math.min(this.visiblePositions.length - 1, this.position + inc));
 
-		this.fallingSprites.forEach(sprite => {
+		this.fallingItems.forEach(sprite => {
 			sprite.x = this.visiblePositions[this.position];
 		});
 	}
 
 	initPositions(count: number) {
-		let { width } = this.sys.game.canvas;
+		let { width, height } = this.sys.game.canvas;
 
 		let widthPortion = width / (count + 1);
 		this.visiblePositions = [];
+		const START_HEIGHT = height - 150;
 		for(let i = 0; i < count; i++) {
-			this.visiblePositions.push(widthPortion * (i + 1));
+			let x = widthPortion * (i + 1);
+			this.visiblePositions.push(x);
+
+			const sprite = this.physics.add.image(x, START_HEIGHT, 'box') as ItemHolderBody;
+			sprite.setScale(1.5, 1);
+			this.itemHolders.add(sprite);
+			sprite.setImmovable(true);
+
+			let label = this.add.text(x, height - 50, '0', {
+				align: 'center',
+				fontSize: '20px',
+				color: 'black',
+				stroke: '#0000FF',
+				strokeThickness: 2,
+				backgroundColor: 'white'
+			});
+			label.setOrigin(0.5, 0.5);
+			sprite.label = label;
+			sprite.weight = 0;
+
+			sprite.setCollideWorldBounds(true);
+			sprite.body.onWorldBounds = true;
+		}
+
+		for(let i = 1; i < count; i++) {
+			let line = this.add.line(0, 0, 0, 0, 0, 0, 0xFFFFFF);
+			line.setLineWidth(3, 3);
+			this.itemHolderLines.push(line);
 		}
 	}
 
 	spawnItem() {
 		let item = randomElement(items);
-		const sprite = this.physics.add.image(this.visiblePositions[this.position], this.startHeight, item.key, item.frame);
+		const sprite = this.physics.add.image(this.visiblePositions[this.position], this.startHeight, item.key, item.frame) as ItemBody;
+		sprite.weight = item.weight;
+
+		this.fallingItems.push(sprite);
+		this.items.add(sprite);
 
 		sprite.setVelocity(0, 200);
+		
 		sprite.setCollideWorldBounds(true);
 		sprite.body.onWorldBounds = true;
-		this.fallingSprites.push(sprite);
+	}
+	itemLanded(itemHolder: ItemHolderBody, item: ItemBody) {
+		let index = this.fallingItems.indexOf(item);
+		if(index !== -1) {
+			this.fallingItems.splice(index);
+		}
+		itemHolder.weight += item.weight;
+		itemHolder.label.text = `${formatNumber(itemHolder.weight)}`;
+
+		this.rebalanceWeights();
+
+		// TODO: Should really keep items on the scale to make look better
+		item.destroy();
+
+		this.spawnItem();
+	}
+
+	rebalanceWeights() {
+		let itemHolders = this.itemHolders.children.entries as Array<ItemHolderBody>;
+		let averageWeight = itemHolders.reduce((total, holder) => total + holder.weight, 0) / itemHolders.length;
+		for(let i = 0; i < itemHolders.length; i++) {
+			let itemHolder = itemHolders[i] as ItemHolderBody;
+
+			let diffWeight = itemHolder.weight - averageWeight;
+			itemHolder.setVelocityY(diffWeight / 20);
+		}
+	}
+
+	pause() {
+		this.physics.pause();
+	}
+	resume() {
+		this.physics.resume();
 	}
 }
