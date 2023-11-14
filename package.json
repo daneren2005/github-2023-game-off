@@ -4,13 +4,18 @@
 	"version": "0.0.0",
 	"type": "module",
 	"scripts": {
+		"deploy:itch": "butler push dist daneren2005/dont-tip-the-scales:html",
 		"dev": "vite --host 127.0.0.1 --port 8080",
 		"build": "tsc && vite build",
 		"format": "prettier --write .",
+		"lint": "eslint src/ --ext .js,.cjs,.mjs,.ts,.tsx,.cts,.mts --ignore-path .gitignore",
 		"preview": "vite preview",
 		"start": "npm run dev"
 	},
 	"devDependencies": {
+		"@typescript-eslint/eslint-plugin": "^6.11.0",
+		"@typescript-eslint/parser": "^6.11.0",
+		"eslint": "^8.53.0",
 		"typescript": "^5.0.2",
 		"vite": "^4.4.5"
 	},

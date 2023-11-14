@@ -162,6 +162,7 @@ export default class GameScene extends Phaser.Scene {
 		}
 
 		this.position = Math.max(0, Math.min(this.visiblePositions.length - 1, this.position + inc));
+		this.updatePosition();
 	}
 	updatePosition() {
 		this.fallingItems.forEach(sprite => {
