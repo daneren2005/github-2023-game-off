@@ -38,8 +38,7 @@ export default class GameScene extends Phaser.Scene {
 	}
 
 	create() {
-		console.log('create');
-		this.initPositions(2);
+		this.initPositions(3);
 		this.spawnItem();
 
 		this.scoreTextBox = this.add.text(0, 0, 'Score: 0', {
