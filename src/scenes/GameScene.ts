@@ -36,6 +36,24 @@ export default class GameScene extends Phaser.Scene {
 	preload() {
 		this.initPhysics();
 		this.initKeys();
+
+		this.input.on('pointerup', (pointer: PointerEvent) => {
+			if(this.paused) {
+				return;
+			}
+
+			let closestIndex = 0;
+			let itemHolders = this.itemHolders.children.entries;
+			for(let i = 1; i < itemHolders.length; i++) {
+				// @ts-expect-error
+				if(Math.abs(itemHolders[i].x - pointer.x) < Math.abs(itemHolders[closestIndex].x - pointer.x)) {
+					closestIndex = i;
+				}
+			}
+
+			this.position = closestIndex;
+			this.updatePosition();
+		}, this);
 	}
 
 	create() {
@@ -144,7 +162,8 @@ export default class GameScene extends Phaser.Scene {
 		}
 
 		this.position = Math.max(0, Math.min(this.visiblePositions.length - 1, this.position + inc));
-
+	}
+	updatePosition() {
 		this.fallingItems.forEach(sprite => {
 			sprite.x = this.visiblePositions[this.position];
 		});
