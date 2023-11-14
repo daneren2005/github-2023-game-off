@@ -13,6 +13,7 @@ export default class GameScene extends Phaser.Scene {
 	position: number = 0;
 	visiblePositions: Array<number> = [];
 	startHeight: number = 30;
+	elapsedTime: number = 0;
 
 	downKeys: Array<Phaser.Input.Keyboard.Key> = [];
 
@@ -45,9 +46,11 @@ export default class GameScene extends Phaser.Scene {
 			color: 'white',
 			fontSize: '30px'
 		});
+		this.elapsedTime = 0;
 	}
 
-	update() {
+	update(time: number, delta: number) {
+		this.elapsedTime += delta;
 		let itemHolders = this.itemHolders.children.entries as Array<ItemHolderBody>;
 		itemHolders.forEach(itemHolder => {
 			itemHolder.label.y = itemHolder.y;
@@ -63,7 +66,7 @@ export default class GameScene extends Phaser.Scene {
 			line.geom.y2 = itemHolder2.y;
 		});
 
-		let speed = Math.min(BASE_SPEED + this.time.now / 1_000 * 20, MAX_SPEED);
+		let speed = Math.min(BASE_SPEED + this.elapsedTime / 1_000 * 20, MAX_SPEED);
 		if(this.downKeys.find(key => key.isDown)) {
 			speed = MAX_SPEED;
 		}
