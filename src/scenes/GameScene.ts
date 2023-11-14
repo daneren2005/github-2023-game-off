@@ -33,16 +33,12 @@ export default class GameScene extends Phaser.Scene {
 	}
 
 	preload() {
-		this.load.spritesheet('food', 'items/Food.png', {
-			frameWidth: 32,
-			frameHeight: 32
-		});
-		this.load.image('box', 'Box.png');
+		this.initPhysics();
+		this.initKeys();
 	}
 
 	create() {
-		this.initPhysics();
-		this.initKeys();
+		console.log('create');
 		this.initPositions(2);
 		this.spawnItem();
 
@@ -99,8 +95,9 @@ export default class GameScene extends Phaser.Scene {
 			// If box hits the bottom you have lost!
 			let holderIndex = this.itemHolders.children.entries.indexOf(sprite);
 			if(holderIndex !== -1) {
-				console.warn('Game over!');
-				this.pause();
+				this.scene.start('gameOver', {
+					score: this.getScore()
+				});
 			}
 
 			// Don't keep triggering this over and over again
@@ -124,7 +121,6 @@ export default class GameScene extends Phaser.Scene {
 			this.incPosition(1);
 		});
 
-		// TODO: Press down to speed up
 		this.downKeys = [
 			this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.S) as Phaser.Input.Keyboard.Key,
 			this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN) as Phaser.Input.Keyboard.Key
@@ -154,6 +150,9 @@ export default class GameScene extends Phaser.Scene {
 
 	initPositions(count: number) {
 		let { width, height } = this.sys.game.canvas;
+
+		this.itemHolderLines = [];
+		this.fallingItems = [];
 
 		let widthPortion = width / (count + 1);
 		this.visiblePositions = [];
@@ -210,10 +209,7 @@ export default class GameScene extends Phaser.Scene {
 		}
 		itemHolder.weight += item.weight;
 		itemHolder.label.text = `${formatNumber(itemHolder.weight)}`;
-
-		let itemHolders = this.itemHolders.children.entries as Array<ItemHolderBody>;
-		let totalScore = itemHolders.reduce((total, itemHolder) => total + itemHolder.weight, 0);
-		this.scoreTextBox.text = `Score: ${totalScore}`;
+		this.scoreTextBox.text = `Score: ${this.getScore()}`;
 
 		this.rebalanceWeights();
 
@@ -232,6 +228,11 @@ export default class GameScene extends Phaser.Scene {
 			let diffWeight = itemHolder.weight - averageWeight;
 			itemHolder.setVelocityY(diffWeight / 5);
 		}
+	}
+
+	getScore() {
+		let itemHolders = this.itemHolders.children.entries as Array<ItemHolderBody>;
+		return itemHolders.reduce((total, itemHolder) => total + itemHolder.weight, 0);
 	}
 
 	pause() {

@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 
+import TitleScene from './scenes/TitleScene.ts';
 import GameScene from './scenes/GameScene.ts';
+import GameOverScene from './scenes/GameOverScene.ts';
 
 const config: Phaser.Types.Core.GameConfig = {
 	type: Phaser.AUTO,
@@ -11,7 +13,11 @@ const config: Phaser.Types.Core.GameConfig = {
 		default: 'arcade',
 		arcade: {}
 	},
-	scene: [GameScene]
+	scene: [
+		TitleScene,
+		GameScene,
+		GameOverScene
+	]
 };
 
 export default new Phaser.Game(config);
