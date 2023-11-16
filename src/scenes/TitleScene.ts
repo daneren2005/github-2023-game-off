@@ -30,12 +30,15 @@ export default class GameScene extends Phaser.Scene {
 	}
 
 	create() {
-		this.continueTextBox.text = 'Click any button to start';
+		this.continueTextBox.text = 'Click enter to start';
 		this.continueTextBox.setStroke('#00f', 16);
 		this.continueTextBox.setShadow(2, 2, "#333333", 2, true, true);
 		this.hsv = Phaser.Display.Color.HSVColorWheel();
 
-		this.input.keyboard?.on('keydown', () => {
+		this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER).on('down', () => {
+			this.scene.start('game');
+		});
+		this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE).on('down', () => {
 			this.scene.start('game');
 		});
 

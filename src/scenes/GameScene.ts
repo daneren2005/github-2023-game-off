@@ -107,9 +107,8 @@ export default class GameScene extends Phaser.Scene {
 			// If somehow we get to the end of the world want to not completely break the game
 			let itemIndex = this.fallingItems.indexOf(sprite as ItemBody);
 			if(itemIndex !== -1) {
-				this.fallingItems.splice(itemIndex);
-				sprite.destroy();
-				this.spawnItem();
+				// @ts-expect-error
+				this.itemLanded(this.itemHolders.children.entries[this.position], this.fallingItems[itemIndex]);
 			}
 
 			// If box hits the bottom you have lost!

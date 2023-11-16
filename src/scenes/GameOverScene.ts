@@ -13,6 +13,9 @@ export default class GameScene extends Phaser.Scene {
 		this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER).on('down', () => {
 			this.scene.start('game');
 		});
+		this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE).on('down', () => {
+			this.scene.start('game');
+		});
 		this.input.on('pointerup', () => {
 			this.scene.start('game');
 		});
