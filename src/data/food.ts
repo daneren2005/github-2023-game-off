@@ -60,6 +60,24 @@ const foods: Array<Item> = [
 		key: 'food',
 		frame: 9,
 		weight: 200
+	},
+	{
+		name: 'Hamburger',
+		key: 'food',
+		frame: 15,
+		weight: 160
+	},
+	{
+		name: 'Pizza',
+		key: 'food',
+		frame: 17,
+		weight: 80
+	},
+	{
+		name: 'Beer',
+		key: 'food',
+		frame: 14,
+		weight: 250
 	}
 ];
 
