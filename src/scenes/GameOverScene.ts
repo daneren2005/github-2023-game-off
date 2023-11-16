@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import addBackground from './utils/add-background';
 
 export default class GameScene extends Phaser.Scene {
 	// @ts-expect-error
@@ -27,19 +28,22 @@ export default class GameScene extends Phaser.Scene {
 
 	create() {
 		let { width, height } = this.sys.game.canvas;
-		this.gameOverTextBox = this.add.text(width / 2, height / 2, [
+		this.gameOverTextBox = this.add.text(width / 2, height / 3, [
 			'Game Over',
 			`Score: ${this.score}`,
 			'',
 			'Press enter to try again'
 		], {
-			color: 'white',
+			color: 'blue',
 			fontSize: '50px',
-			align: 'center'
+			align: 'center',
+			fontStyle: 'bold'
 		});
 		this.gameOverTextBox.setOrigin(0.5, 0.5);
 		this.gameOverTextBox.width = width;
 		this.gameOverTextBox.setWordWrapWidth(width);
+
+		addBackground(this);
 	}
 }
 

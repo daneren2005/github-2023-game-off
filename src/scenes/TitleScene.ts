@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import addBackground from './utils/add-background';
 
 export default class GameScene extends Phaser.Scene {
 	// @ts-expect-error
@@ -13,7 +14,7 @@ export default class GameScene extends Phaser.Scene {
 
 	preload() {
 		let { width, height } = this.sys.game.canvas;
-		this.continueTextBox = this.add.text(width / 2, height / 2, 'Loading', {
+		this.continueTextBox = this.add.text(width / 2, height / 3, 'Loading', {
 			color: 'white',
 			fontSize: '50px',
 			align: 'center'
@@ -27,6 +28,7 @@ export default class GameScene extends Phaser.Scene {
 			frameHeight: 32
 		});
 		this.load.image('box', 'Box.png');
+		this.load.image('background', 'background.jpg');
 	}
 
 	create() {
@@ -45,6 +47,8 @@ export default class GameScene extends Phaser.Scene {
 		this.input.on('pointerup', () => {
 			this.scene.start('game');
 		}, this);
+
+		addBackground(this);
 	}
 
 	update () {

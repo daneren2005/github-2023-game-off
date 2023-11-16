@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import items from '../data/items';
 import randomElement from '../utils/random-element';
 import formatNumber from '../utils/format-number';
+import addBackground from './utils/add-background';
 
 type PhysicsBody = Phaser.Types.Physics.Arcade.ImageWithDynamicBody;
 type ItemBody = PhysicsBody & { weight: number };
@@ -61,10 +62,13 @@ export default class GameScene extends Phaser.Scene {
 		this.spawnItem();
 
 		this.scoreTextBox = this.add.text(0, 0, 'Score: 0', {
-			color: 'white',
-			fontSize: '30px'
+			color: 'blue',
+			fontSize: '30px',
+			fontStyle: 'bold'
 		});
 		this.elapsedTime = 0;
+
+		addBackground(this);
 	}
 
 	update(time: number, delta: number) {
